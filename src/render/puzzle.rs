@@ -8,15 +8,11 @@ use crate::warehouse::structs::Warehouse;
 use super::player::{player_transform, RenderPlayer};
 use super::objects::{object_transform, RenderObject};
 
-const TICK:u64 = 500;
-const ANIM:usize = 400;
+const TICK:u64 = 200;
 
 #[derive(Resource)]
 pub struct PuzzleSolvingTicker {
     timer: Timer,
-    // step_timer: Option<Timer>,
-    // player_move: Option<WarehousePosition>,
-    // objects_move: Option<HashMap<usize, WarehousePosition>>
 }
 
 pub fn setup_puzzle_ticker( mut commands: Commands,) {
@@ -31,7 +27,7 @@ pub struct SmoothObject {
     pub from: Transform,
     pub to: Transform,
     pub timer: Timer,
-    pub time: usize
+    pub time: u128
 }
 
 #[derive(Component)]
@@ -39,9 +35,13 @@ pub struct SmoothPlayer {
     pub from: Transform,
     pub to: Transform,
     pub timer: Timer,
-    pub time: usize,
+    pub time: u128,
     pub good: bool
 
+}
+#[derive(Component)]
+pub struct ScoreBoard {
+    pub score: usize
 }
 
 pub fn smooth_object(
@@ -81,8 +81,8 @@ pub fn smooth_player(
             } else {
                 let elapsed = smooth.timer.elapsed().as_millis();
 
-                let elapsed = if !smooth.good && elapsed > (smooth.time as u128 / 2) {
-                    smooth.time as u128 - elapsed
+                let elapsed = if !smooth.good && elapsed > (smooth.time / 2) {
+                    smooth.time - elapsed
                 } else {
                     elapsed
                 };
@@ -99,7 +99,6 @@ pub fn step_trigger(
     time: Res<Time>,
     player_query: Query<(&RenderPlayer, &Transform), Without<RenderObject>>,
     objects_query: Query<(&RenderObject, &Transform)>,
-    // mut objects_query: Query<(&RenderObject, &mut Transform), Without<RenderPlayer>>,
     mut warehouse: ResMut<Warehouse>,
     mut puzzle_ticker: ResMut<PuzzleSolvingTicker>,
 ) {
@@ -107,6 +106,16 @@ pub fn step_trigger(
 
     if puzzle_ticker.timer.finished() {
         if !warehouse.movements.is_empty() {
+            let anim = puzzle_ticker.timer.duration().as_millis();
+            if anim > 3 {
+                puzzle_ticker.timer.set_duration(Duration::from_millis(anim as u64 - 1));
+            }
+            if warehouse.movements.is_empty() {
+                puzzle_ticker.timer.set_duration(Duration::from_millis(100));
+            } else if anim > 3 {
+                puzzle_ticker.timer.set_duration(Duration::from_millis(anim as u64 - 1));
+            }
+
             let step = warehouse.movements.remove(0);
 
             let (player, moved_objects) = take_step(&warehouse.player, &step, &warehouse.objects, &warehouse.walls);
@@ -118,8 +127,8 @@ pub fn step_trigger(
                 commands.spawn(SmoothPlayer {
                     from: *t,
                     to: player_transform(&warehouse),
-                    timer: Timer::new(Duration::from_millis(ANIM as u64), TimerMode::Once),
-                    time: ANIM,
+                    timer: Timer::new(Duration::from_millis(anim as u64), TimerMode::Once),
+                    time: anim,
                     good: true
 
                 });
@@ -129,8 +138,8 @@ pub fn step_trigger(
                 commands.spawn(SmoothPlayer {
                     from: *t,
                     to: object_transform(&pos, &warehouse),
-                    timer: Timer::new(Duration::from_millis(ANIM as u64), TimerMode::Once),
-                    time: ANIM,
+                    timer: Timer::new(Duration::from_millis(anim as u64), TimerMode::Once),
+                    time: anim,
                     good: false
                 });
             }
@@ -143,8 +152,8 @@ pub fn step_trigger(
                                 index: idx,
                                 from: *t,
                                 to: object_transform(&pos, &warehouse),
-                                timer: Timer::new(Duration::from_millis(ANIM as u64), TimerMode::Once),
-                                time: ANIM
+                                timer: Timer::new(Duration::from_millis(anim as u64), TimerMode::Once),
+                                time: anim
                             });
                         }
                     }
@@ -152,8 +161,7 @@ pub fn step_trigger(
             }
 
         } else {
-            println!("do stuff");
+            
         }
     } 
 }
-
