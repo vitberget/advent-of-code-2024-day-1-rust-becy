@@ -2,8 +2,6 @@ use bevy::prelude::*;
 
 use crate::warehouse::structs::Warehouse;
 
-use super::RenderWarehousePosition;
-
 #[derive(Component)]
 pub struct RenderPlayer;
 
@@ -18,7 +16,6 @@ pub fn add_player(
 
     commands.spawn((
             RenderPlayer,
-            RenderWarehousePosition(warehouse.player),
             player_transform(&warehouse)
     ))
         .with_children(|parent| {

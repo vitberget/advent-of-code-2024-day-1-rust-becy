@@ -1,15 +1,12 @@
 use bevy::prelude::*;
 
-use crate::warehouse::structs::WarehousePosition;
-
-pub mod walls;
 pub mod floor;
 pub mod objects;
 pub mod player;
 pub mod puzzle;
-
-#[derive(Component)]
-pub struct RenderWarehousePosition(WarehousePosition);
+pub mod score;
+pub mod text;
+pub mod walls;
 
 pub fn setup_things( mut commands: Commands,) {
     // light

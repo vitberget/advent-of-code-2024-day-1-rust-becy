@@ -12,7 +12,7 @@ const TICK:u64 = 200;
 
 #[derive(Resource)]
 pub struct PuzzleSolvingTicker {
-    timer: Timer,
+    pub timer: Timer,
 }
 
 pub fn setup_puzzle_ticker( mut commands: Commands,) {
@@ -104,64 +104,53 @@ pub fn step_trigger(
 ) {
     puzzle_ticker.timer.tick(time.delta());
 
-    if puzzle_ticker.timer.finished() {
-        if !warehouse.movements.is_empty() {
-            let anim = puzzle_ticker.timer.duration().as_millis();
-            if anim > 3 {
-                puzzle_ticker.timer.set_duration(Duration::from_millis(anim as u64 - 1));
-            }
-            if warehouse.movements.is_empty() {
-                puzzle_ticker.timer.set_duration(Duration::from_millis(100));
-            } else if anim > 3 {
-                puzzle_ticker.timer.set_duration(Duration::from_millis(anim as u64 - 1));
-            }
+    if puzzle_ticker.timer.finished() && !warehouse.movements.is_empty() {
+        let step = warehouse.movements.remove(0);
 
-            let step = warehouse.movements.remove(0);
+        let anim = puzzle_ticker.timer.duration().as_millis();
 
-            let (player, moved_objects) = take_step(&warehouse.player, &step, &warehouse.objects, &warehouse.walls);
+        if warehouse.movements.is_empty() { puzzle_ticker.timer.set_duration(Duration::from_millis(500)); } 
+        else if anim > 0 { puzzle_ticker.timer.set_duration(Duration::from_millis(anim as u64 - 1)); }
 
+        let (player, moved_objects) = take_step(&warehouse.player, &step, &warehouse.objects, &warehouse.walls);
 
-            if let Some(player) = player {
-                warehouse.player = player;
-                let (_,t) = player_query.single();
-                commands.spawn(SmoothPlayer {
-                    from: *t,
-                    to: player_transform(&warehouse),
-                    timer: Timer::new(Duration::from_millis(anim as u64), TimerMode::Once),
-                    time: anim,
-                    good: true
+        if let Some(player) = player {
+            warehouse.player = player;
+            let (_,t) = player_query.single();
+            commands.spawn(SmoothPlayer {
+                from: *t,
+                to: player_transform(&warehouse),
+                timer: Timer::new(Duration::from_millis(anim as u64), TimerMode::Once),
+                time: anim,
+                good: true
 
-                });
-            } else {
-                let (_,t) = player_query.single();
-                let pos = warehouse.player + step.delta_position();
-                commands.spawn(SmoothPlayer {
-                    from: *t,
-                    to: object_transform(&pos, &warehouse),
-                    timer: Timer::new(Duration::from_millis(anim as u64), TimerMode::Once),
-                    time: anim,
-                    good: false
-                });
-            }
-            if let Some(objects) = moved_objects {
-                for (idx, pos) in objects {
-                    warehouse.objects.insert(idx, pos);
-                    for (o, t) in &objects_query {
-                        if o.index == idx {
-                            commands.spawn(SmoothObject {
-                                index: idx,
-                                from: *t,
-                                to: object_transform(&pos, &warehouse),
-                                timer: Timer::new(Duration::from_millis(anim as u64), TimerMode::Once),
-                                time: anim
-                            });
-                        }
+            });
+        } else {
+            let (_,t) = player_query.single();
+            let pos = warehouse.player + step.delta_position();
+            commands.spawn(SmoothPlayer {
+                from: *t,
+                to: object_transform(&pos, &warehouse),
+                timer: Timer::new(Duration::from_millis(anim as u64), TimerMode::Once),
+                time: anim,
+                good: false
+            });
+        }
+        if let Some(objects) = moved_objects {
+            for (idx, pos) in objects {
+                warehouse.objects.insert(idx, pos);
+                for (o, t) in &objects_query {
+                    if o.index == idx {
+                        commands.spawn(SmoothObject {
+                            index: idx,
+                            from: *t,
+                            to: object_transform(&pos, &warehouse),
+                            timer: Timer::new(Duration::from_millis(anim as u64), TimerMode::Once),
+                            time: anim
+                        });
                     }
                 }
             }
-
-        } else {
-            
         }
     } 
 }

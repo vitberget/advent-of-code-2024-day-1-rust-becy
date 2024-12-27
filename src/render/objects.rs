@@ -2,8 +2,6 @@ use bevy::prelude::*;
 
 use crate::warehouse::structs::{Warehouse, WarehousePosition};
 
-use super::RenderWarehousePosition;
-
 #[derive(Component)]
 pub struct RenderObject { pub index: usize }
 
@@ -19,7 +17,6 @@ pub fn add_objects(
     for (idx, pos) in warehouse.objects.iter() {
         commands.spawn((
             RenderObject{ index: *idx },
-            RenderWarehousePosition(*pos),
             Mesh3d(mesh.clone()),
             MeshMaterial3d(material.clone()),
             object_transform(pos, &warehouse)
