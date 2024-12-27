@@ -3,7 +3,7 @@ use std::fs::read_to_string;
 use bevy::prelude::*;
 use render::objects::add_objects;
 use render::player::add_player;
-use render::puzzle::{setup_puzzle_ticker, smooth_object, step_trigger};
+use render::puzzle::{setup_puzzle_ticker, smooth_object, smooth_player, step_trigger};
 use render::setup_things;
 use render::walls::add_walls;
 use render::floor::add_floor;
@@ -20,7 +20,7 @@ fn main() -> anyhow::Result<()> {
        .add_plugins(DefaultPlugins)
        .insert_resource(warehouse)
        .add_systems(Startup, (setup_things, add_floor, add_walls, add_objects, add_player, setup_puzzle_ticker))
-       .add_systems(Update, (step_trigger, smooth_object))
+       .add_systems(Update, (step_trigger, smooth_object, smooth_player))
        .run();
 
     Ok(())
