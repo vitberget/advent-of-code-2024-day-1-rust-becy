@@ -2,6 +2,11 @@ use bevy::prelude::*;
 
 use crate::warehouse::structs::Warehouse;
 
+use super::RenderWarehousePosition;
+
+#[derive(Component)]
+struct RenderPlayer;
+
 pub fn add_player(
     mut commands: Commands,
     warehouse: Res<Warehouse>,
@@ -12,26 +17,29 @@ pub fn add_player(
     let material = materials.add(Color::srgb(1.0, 0.2, 0.3));
 
     commands.spawn((
-            Mesh3d(mesh.clone()),
-            MeshMaterial3d(material.clone()),
+            RenderPlayer,
+            RenderWarehousePosition(warehouse.player),
             Transform::from_xyz(
                 warehouse.player.x as f32 - warehouse.width as f32 / 2.0, 
                 warehouse.player.y as f32 - warehouse.width as f32 / 2.0, 
-                1.5).with_rotation(Quat::from_rotation_x(std::f32::consts::FRAC_PI_2)),
-    ));
+                1.5)
 
-    commands.spawn((
-            PointLight {
-                shadows_enabled: true,
-                range: 7.0,
-                // radius: 30.0,
-                intensity: 1_000_000.0,
-                ..default()
-            },
-            Transform::from_xyz(
-                warehouse.player.x as f32 - warehouse.width as f32 / 2.0, 
-                warehouse.player.y as f32 - warehouse.width as f32 / 2.0, 
-                5.5)
-
-    ));
+    ))
+        .with_children(|parent| {
+            parent.spawn((
+                    Mesh3d(mesh.clone()),
+                    MeshMaterial3d(material.clone()),
+                    Transform::from_rotation(Quat::from_rotation_x(std::f32::consts::FRAC_PI_2))
+            ));
+            parent.spawn((
+                    PointLight {
+                        shadows_enabled: true,
+                        range: 7.0,
+                        // radius: 30.0,
+                        intensity: 500_000.0,
+                        ..default()
+                    },
+                    Transform::from_xyz(0.0, 0.0, 3.5)
+            ));
+        });
 }
