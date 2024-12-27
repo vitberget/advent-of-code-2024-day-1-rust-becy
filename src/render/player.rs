@@ -5,7 +5,7 @@ use crate::warehouse::structs::Warehouse;
 use super::RenderWarehousePosition;
 
 #[derive(Component)]
-struct RenderPlayer;
+pub struct RenderPlayer;
 
 pub fn add_player(
     mut commands: Commands,
@@ -19,11 +19,7 @@ pub fn add_player(
     commands.spawn((
             RenderPlayer,
             RenderWarehousePosition(warehouse.player),
-            Transform::from_xyz(
-                warehouse.player.x as f32 - warehouse.width as f32 / 2.0, 
-                warehouse.player.y as f32 - warehouse.width as f32 / 2.0, 
-                1.5)
-
+            player_transform(&warehouse)
     ))
         .with_children(|parent| {
             parent.spawn((
@@ -42,4 +38,12 @@ pub fn add_player(
                     Transform::from_xyz(0.0, 0.0, 3.5)
             ));
         });
+}
+
+pub fn player_transform(warehouse: &Warehouse) -> Transform {
+    Transform::from_xyz(
+        warehouse.player.x as f32 - warehouse.width as f32 / 2.0, 
+        warehouse.player.y as f32 - warehouse.width as f32 / 2.0, 
+        1.5)
+
 }

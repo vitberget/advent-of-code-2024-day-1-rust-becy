@@ -6,6 +6,7 @@ pub mod walls;
 pub mod floor;
 pub mod objects;
 pub mod player;
+pub mod puzzle;
 
 #[derive(Component)]
 pub struct RenderWarehousePosition(WarehousePosition);
@@ -29,3 +30,4 @@ pub fn setup_things( mut commands: Commands,) {
     ));
 
 }
+
