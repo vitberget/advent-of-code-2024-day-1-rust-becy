@@ -49,18 +49,21 @@ pub fn smooth_object(
     mut commands: Commands,
     time: Res<Time>,
     mut objects_query: Query<(&RenderObject, &mut Transform)>,
-    mut smooth_query: Query<(Entity, &mut SmoothObject)>
+    mut smooth_query: Query<(Entity, &mut SmoothObject)>,
+    next_puzzle_state: Res<NextState<PuzzleState>>,
 ) {
-    for (entity, mut smooth) in &mut smooth_query {
-        smooth.timer.tick(time.delta());
-        for (o, mut t) in &mut objects_query {
-            if smooth.timer.finished() { commands.entity(entity).despawn(); }
-            if o.index == smooth.index {
-                if smooth.timer.finished() || smooth.timer.duration().as_millis() < 3 {
-                    *t = smooth.to;
-                } else {
-                    let d = (smooth.timer.elapsed().as_millis() as f32) / (smooth.time as f32);
-                    t.translation = smooth.from.translation +  (smooth.to.translation - smooth.from.translation) * d;
+    if !next_puzzle_state.is_added() {
+        for (entity, mut smooth) in &mut smooth_query {
+            smooth.timer.tick(time.delta());
+            for (o, mut t) in &mut objects_query {
+                if smooth.timer.finished() { commands.entity(entity).despawn(); }
+                if o.index == smooth.index {
+                    if smooth.timer.finished() || smooth.timer.duration().as_millis() < 3 {
+                        *t = smooth.to;
+                    } else {
+                        let d = (smooth.timer.elapsed().as_millis() as f32) / (smooth.time as f32);
+                        t.translation = smooth.from.translation +  (smooth.to.translation - smooth.from.translation) * d;
+                    }
                 }
             }
         }
@@ -71,27 +74,64 @@ pub fn smooth_player(
     mut commands: Commands,
     time: Res<Time>,
     mut player_query: Query<(&RenderPlayer, &mut Transform)>,
-    mut smooth_query: Query<(Entity, &mut SmoothPlayer)>
+    mut smooth_query: Query<(Entity, &mut SmoothPlayer)>,
+    next_puzzle_state: Res<NextState<PuzzleState>>,
 ) {
-    for (entity, mut smooth) in &mut smooth_query {
-        smooth.timer.tick(time.delta());
-        for (_, mut t) in &mut player_query {
-            if smooth.timer.finished() || smooth.timer.duration().as_millis() < 3 {
-                *t = if smooth.good { smooth.to } else { smooth.from };
-                commands.entity(entity).despawn();
-            } else {
-                let elapsed = smooth.timer.elapsed().as_millis();
-
-                let elapsed = if !smooth.good && elapsed > (smooth.time / 2) {
-                    smooth.time - elapsed
+    if !next_puzzle_state.is_added() {
+        for (entity, mut smooth) in &mut smooth_query {
+            smooth.timer.tick(time.delta());
+            for (_, mut t) in &mut player_query {
+                if smooth.timer.finished() || smooth.timer.duration().as_millis() < 3 {
+                    *t = if smooth.good { smooth.to } else { smooth.from };
+                    commands.entity(entity).despawn();
                 } else {
-                    elapsed
-                };
+                    let elapsed = smooth.timer.elapsed().as_millis();
 
-                let d = (elapsed as f32) / (smooth.time as f32);
-                t.translation = smooth.from.translation +  (smooth.to.translation - smooth.from.translation) * d;
+                    let elapsed = if !smooth.good && elapsed > (smooth.time / 2) {
+                        smooth.time - elapsed
+                    } else {
+                        elapsed
+                    };
+
+                    let d = (elapsed as f32) / (smooth.time as f32);
+                    t.translation = smooth.from.translation +  (smooth.to.translation - smooth.from.translation) * d;
+                }
             }
         }
+    }
+}
+
+pub fn escape_the_matrix(
+    keys: Res<ButtonInput<KeyCode>>,
+    // mut commands: Commands,
+    mut player_query: Query<(&RenderPlayer, &mut Transform), Without<RenderObject>>,
+    mut objects_query: Query<(&RenderObject, &mut Transform)>,
+    mut next_puzzle_state: ResMut<NextState<PuzzleState>>,
+    mut warehouse: ResMut<Warehouse>,
+) {
+    if keys.just_pressed(KeyCode::Escape) {
+        for step in  warehouse.movements.clone() {
+            let (player, objects) = take_step(&warehouse.player, &step, &warehouse.objects, &warehouse.walls); 
+            if let Some(player) = player {
+                warehouse.player = player;
+            }
+            if let Some(objects) = objects {
+                for (key, value) in objects {
+                    warehouse.objects.insert(key, value);
+                }
+            }
+        }
+
+        let (_, mut t) = player_query.single_mut();
+        *t = player_transform(&warehouse);
+
+        for (o, mut t) in &mut objects_query {
+            if let Some(pos) = warehouse.objects.get(&o.index) {
+                *t = object_transform(pos, &warehouse);
+            }
+        }
+
+        next_puzzle_state.set(PuzzleState::Scoring);
     }
 }
 
@@ -107,7 +147,7 @@ pub fn step_trigger(
     puzzle_ticker.timer.tick(time.delta());
     let anim = puzzle_ticker.timer.duration().as_millis();
 
-    if puzzle_ticker.timer.finished() || anim  < 3 {
+    if (puzzle_ticker.timer.finished() || anim  < 3) && !warehouse.movements.is_empty() {
         let step = warehouse.movements.remove(0);
 
         if warehouse.movements.is_empty() { next_puzzle_state.set(PuzzleState::Scoring) } 

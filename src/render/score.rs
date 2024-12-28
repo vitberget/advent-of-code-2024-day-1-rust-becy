@@ -19,6 +19,7 @@ pub fn setup_score(
     asset_server: Res<AssetServer>,
     mut puzzle_ticker: ResMut<PuzzleSolvingTicker>,
 ) {
+    println!("Setup score");
     commands.insert_resource(Score { score: 0});
     commands.spawn((
             Text::new(""),
@@ -47,7 +48,7 @@ pub fn score_trigger(
 ) {
     puzzle_ticker.timer.tick(time.delta());
 
-    if puzzle_ticker.timer.finished() && warehouse.movements.is_empty() && !warehouse.objects.is_empty() {
+    if puzzle_ticker.timer.finished() && !warehouse.objects.is_empty() {
         let anim = puzzle_ticker.timer.duration().as_millis();
         if anim > 0 { puzzle_ticker.timer.set_duration(Duration::from_millis(anim as u64 - 1)); }
 
