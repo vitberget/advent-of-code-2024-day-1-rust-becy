@@ -1,19 +1,36 @@
+use std::time::Duration;
+
 use bevy::prelude::*;
 
 use crate::warehouse::structs::Warehouse;
+use crate::PuzzleState;
 
-use super::objects::{self, RenderObject};
-use super::text::get_text_mesh;
+use super::objects::RenderObject;
 use super::puzzle::PuzzleSolvingTicker;
 
 #[derive(Component)]
-pub struct ScoreTest;
+pub struct ScoreText;
 
 #[derive(Resource)]
 pub struct Score { pub score: usize }
 
-pub fn setup_score(mut commands: Commands) {
+pub fn setup_score(
+    mut commands: Commands, 
+    asset_server: Res<AssetServer>,
+    mut puzzle_ticker: ResMut<PuzzleSolvingTicker>,
+) {
     commands.insert_resource(Score { score: 0});
+    commands.spawn((
+            Text::new(""),
+            TextFont {
+                font: asset_server.load("fonts/DejaVuSans.ttf"),
+                font_size: 42.0,
+                ..default()
+            },
+            ScoreText
+    ));
+    puzzle_ticker.timer.set_duration(Duration::from_millis(200));
+    puzzle_ticker.timer.reset();
 }
 
 
@@ -22,32 +39,28 @@ pub fn score_trigger(
     mut commands: Commands,
     time: Res<Time>,
     mut score: ResMut<Score>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
     mut warehouse: ResMut<Warehouse>,
-    scores_query: Query<(Entity, &ScoreTest)>,
+    mut text_query: Query<&mut Text, With<ScoreText>>,
+    mut next_puzzle_state: ResMut<NextState<PuzzleState>>,
     objects_query: Query<(Entity, &RenderObject)>,
     mut puzzle_ticker: ResMut<PuzzleSolvingTicker>,
 ) {
-
     puzzle_ticker.timer.tick(time.delta());
+
     if puzzle_ticker.timer.finished() && warehouse.movements.is_empty() && !warehouse.objects.is_empty() {
-        for (entity, _) in &scores_query { commands.entity(entity).despawn(); }
+        let anim = puzzle_ticker.timer.duration().as_millis();
+        if anim > 0 { puzzle_ticker.timer.set_duration(Duration::from_millis(anim as u64 - 1)); }
+
         if let Some((entity, object)) = objects_query.iter().next() {
-           if let Some(pos) = warehouse.objects.remove(&object.index) {
-               println!("pos {:?}", pos);
+            if let Some(pos) = warehouse.objects.remove(&object.index) {
+                println!("pos {:?}", pos);
                 score.score += 100 * pos.y as usize + pos.x as usize;
-           }
-           commands.entity(entity).despawn();
+            }
+            commands.entity(entity).despawn();
         }
 
-        let (mesh, offset) = get_text_mesh(format!("{}", score.score).as_str(), 4.0);
+        for mut text in &mut text_query { **text = format!("{}", score.score); }
 
-        commands.spawn((
-                Mesh3d(meshes.add(mesh)),
-                MeshMaterial3d(materials.add(Color::srgb(0.0, 0.0, 0.0))),
-                Transform::from_xyz(0.0, offset.x, 5.4).with_rotation(Quat::from_rotation_z(std::f32::consts::FRAC_PI_2)),
-                ScoreTest
-        ));
+        if warehouse.objects.is_empty() { next_puzzle_state.set(PuzzleState::Completed); }
     }
 }

@@ -4,6 +4,7 @@ use bevy::prelude::*;
 
 use crate::warehouse::take_step::take_step;
 use crate::warehouse::structs::Warehouse;
+use crate::PuzzleState;
 
 use super::player::{player_transform, RenderPlayer};
 use super::objects::{object_transform, RenderObject};
@@ -55,7 +56,7 @@ pub fn smooth_object(
         for (o, mut t) in &mut objects_query {
             if smooth.timer.finished() { commands.entity(entity).despawn(); }
             if o.index == smooth.index {
-                if smooth.timer.finished() {
+                if smooth.timer.finished() || smooth.timer.duration().as_millis() < 3 {
                     *t = smooth.to;
                 } else {
                     let d = (smooth.timer.elapsed().as_millis() as f32) / (smooth.time as f32);
@@ -75,7 +76,7 @@ pub fn smooth_player(
     for (entity, mut smooth) in &mut smooth_query {
         smooth.timer.tick(time.delta());
         for (_, mut t) in &mut player_query {
-            if smooth.timer.finished() {
+            if smooth.timer.finished() || smooth.timer.duration().as_millis() < 3 {
                 *t = if smooth.good { smooth.to } else { smooth.from };
                 commands.entity(entity).despawn();
             } else {
@@ -99,17 +100,17 @@ pub fn step_trigger(
     time: Res<Time>,
     player_query: Query<(&RenderPlayer, &Transform), Without<RenderObject>>,
     objects_query: Query<(&RenderObject, &Transform)>,
+    mut next_puzzle_state: ResMut<NextState<PuzzleState>>,
     mut warehouse: ResMut<Warehouse>,
     mut puzzle_ticker: ResMut<PuzzleSolvingTicker>,
 ) {
     puzzle_ticker.timer.tick(time.delta());
+    let anim = puzzle_ticker.timer.duration().as_millis();
 
-    if puzzle_ticker.timer.finished() && !warehouse.movements.is_empty() {
+    if puzzle_ticker.timer.finished() || anim  < 3 {
         let step = warehouse.movements.remove(0);
 
-        let anim = puzzle_ticker.timer.duration().as_millis();
-
-        if warehouse.movements.is_empty() { puzzle_ticker.timer.set_duration(Duration::from_millis(500)); } 
+        if warehouse.movements.is_empty() { next_puzzle_state.set(PuzzleState::Scoring) } 
         else if anim > 0 { puzzle_ticker.timer.set_duration(Duration::from_millis(anim as u64 - 1)); }
 
         let (player, moved_objects) = take_step(&warehouse.player, &step, &warehouse.objects, &warehouse.walls);
