@@ -154,13 +154,15 @@ pub fn step_trigger(
     mut puzzle_ticker: ResMut<PuzzleSolvingTicker>,
 ) {
     puzzle_ticker.timer.tick(time.delta());
-    let anim = puzzle_ticker.timer.duration().as_millis();
+    let mut anim = puzzle_ticker.timer.duration().as_millis();
 
-    if (puzzle_ticker.timer.finished() || anim  < 3) && !warehouse.movements.is_empty() {
+    if !next_puzzle_state.is_added() && puzzle_ticker.timer.finished() && !warehouse.movements.is_empty() {
         let step = warehouse.movements.remove(0);
 
         if warehouse.movements.is_empty() { next_puzzle_state.set(PuzzleState::Scoring) } 
-        else if anim > 0 { puzzle_ticker.timer.set_duration(Duration::from_millis(anim as u64 - 1)); }
+        else if anim > 2 { puzzle_ticker.timer.set_duration(Duration::from_millis(anim as u64 - 1)); }
+
+        if anim > 150 { anim = (anim * 7) / 10; }
 
         let (player, moved_objects) = take_step(&warehouse.player, &step, &warehouse.objects, &warehouse.walls);
 
