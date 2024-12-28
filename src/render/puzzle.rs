@@ -6,10 +6,10 @@ use crate::warehouse::take_step::take_step;
 use crate::warehouse::structs::Warehouse;
 use crate::PuzzleState;
 
-use super::player::{player_transform, RenderPlayer};
+use super::player::{player_transform, RenderPlayer, RenderPlayerLight};
 use super::objects::{object_transform, RenderObject};
 
-const TICK:u64 = 200;
+const TICK:u64 = 400;
 
 #[derive(Resource)]
 pub struct PuzzleSolvingTicker {
@@ -75,15 +75,19 @@ pub fn smooth_player(
     time: Res<Time>,
     mut player_query: Query<(&RenderPlayer, &mut Transform)>,
     mut smooth_query: Query<(Entity, &mut SmoothPlayer)>,
+    mut light_query: Query<&mut PointLight, With<RenderPlayerLight>>, 
     next_puzzle_state: Res<NextState<PuzzleState>>,
 ) {
     if !next_puzzle_state.is_added() {
         for (entity, mut smooth) in &mut smooth_query {
             smooth.timer.tick(time.delta());
-            for (_, mut t) in &mut player_query {
+            for ( _, mut t) in &mut player_query {
                 if smooth.timer.finished() || smooth.timer.duration().as_millis() < 3 {
                     *t = if smooth.good { smooth.to } else { smooth.from };
                     commands.entity(entity).despawn();
+                   
+                    light_query.single_mut().color = Color::srgb(1.0, 1.0, 1.0);
+
                 } else {
                     let elapsed = smooth.timer.elapsed().as_millis();
 
@@ -105,6 +109,7 @@ pub fn escape_the_matrix(
     keys: Res<ButtonInput<KeyCode>>,
     // mut commands: Commands,
     mut player_query: Query<(&RenderPlayer, &mut Transform), Without<RenderObject>>,
+    mut light_query: Query<&mut PointLight, With<RenderPlayerLight>>, 
     mut objects_query: Query<(&RenderObject, &mut Transform)>,
     mut next_puzzle_state: ResMut<NextState<PuzzleState>>,
     mut warehouse: ResMut<Warehouse>,
@@ -131,14 +136,18 @@ pub fn escape_the_matrix(
             }
         }
 
+        light_query.single_mut().color = Color::srgb(1.0, 1.0, 1.0);
+
         next_puzzle_state.set(PuzzleState::Scoring);
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn step_trigger(
     mut commands: Commands,
     time: Res<Time>,
     player_query: Query<(&RenderPlayer, &Transform), Without<RenderObject>>,
+    mut light_query: Query<&mut PointLight, With<RenderPlayerLight>>, 
     objects_query: Query<(&RenderObject, &Transform)>,
     mut next_puzzle_state: ResMut<NextState<PuzzleState>>,
     mut warehouse: ResMut<Warehouse>,
@@ -176,6 +185,7 @@ pub fn step_trigger(
                 time: anim,
                 good: false
             });
+            light_query.single_mut().color = Color::srgb(1.0, 0.0, 0.0);
         }
         if let Some(objects) = moved_objects {
             for (idx, pos) in objects {

@@ -5,6 +5,9 @@ use crate::warehouse::structs::Warehouse;
 #[derive(Component)]
 pub struct RenderPlayer;
 
+#[derive(Component)]
+pub struct RenderPlayerLight;
+
 pub fn add_player(
     mut commands: Commands,
     warehouse: Res<Warehouse>,
@@ -32,7 +35,8 @@ pub fn add_player(
                         intensity: 500_000.0,
                         ..default()
                     },
-                    Transform::from_xyz(0.0, 0.0, 3.5)
+                    Transform::from_xyz(0.0, 0.0, 3.5),
+                    RenderPlayerLight
             ));
         });
 }
