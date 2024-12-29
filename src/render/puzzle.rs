@@ -39,7 +39,6 @@ pub fn change_speed(
 
 pub fn escape_the_matrix(
     keys: Res<ButtonInput<KeyCode>>,
-    // mut commands: Commands,
     mut player_query: Query<(&RenderPlayer, &mut Transform), Without<RenderObject>>,
     mut light_query: Query<&mut PointLight, With<RenderPlayerLight>>, 
     mut objects_query: Query<(&RenderObject, &mut Transform)>,
