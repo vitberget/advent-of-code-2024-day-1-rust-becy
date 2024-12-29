@@ -5,6 +5,7 @@ pub mod objects;
 pub mod player;
 pub mod puzzle;
 pub mod score;
+pub mod smooth;
 pub mod walls;
 
 pub fn setup_things( mut commands: Commands,) {
