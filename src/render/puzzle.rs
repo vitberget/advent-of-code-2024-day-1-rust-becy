@@ -12,20 +12,29 @@ use super::smooth::{SmoothObject, SmoothPlayer};
 
 const TICK:u64 = 400;
 
-#[derive(Resource)]
-pub struct PuzzleSolvingTicker {
-    pub timer: Timer,
-}
-
-#[derive(Component)]
-pub struct ScoreBoard {
-    pub score: usize
-}
+#[derive(Resource)] pub struct PuzzleSolvingTicker { pub timer: Timer, }
+#[derive(Resource)] pub struct NextDuration { pub duration: u64 }
+#[derive(Component)] pub struct ScoreBoard { pub score: usize }
 
 pub fn setup_puzzle_ticker( mut commands: Commands,) {
-    commands.insert_resource(PuzzleSolvingTicker {
-        timer: Timer::new(Duration::from_millis(TICK), TimerMode::Repeating),
-    })
+    commands.insert_resource(PuzzleSolvingTicker { timer: Timer::new(Duration::from_millis(TICK), TimerMode::Repeating), });
+    commands.insert_resource(NextDuration { duration: 400 });
+}
+
+pub fn change_speed(
+    keys: Res<ButtonInput<KeyCode>>,
+    mut next_duration: ResMut<NextDuration>,
+) {
+    if keys.just_pressed(KeyCode::Digit1) { next_duration.duration = 800 }
+    if keys.just_pressed(KeyCode::Digit2) { next_duration.duration = 400 }
+    if keys.just_pressed(KeyCode::Digit3) { next_duration.duration = 300 }
+    if keys.just_pressed(KeyCode::Digit4) { next_duration.duration = 200 }
+    if keys.just_pressed(KeyCode::Digit5) { next_duration.duration = 150 }
+    if keys.just_pressed(KeyCode::Digit6) { next_duration.duration = 100 }
+    if keys.just_pressed(KeyCode::Digit7) { next_duration.duration = 50 }
+    if keys.just_pressed(KeyCode::Digit8) { next_duration.duration = 20 }
+    if keys.just_pressed(KeyCode::Digit9) { next_duration.duration = 10 }
+    if keys.just_pressed(KeyCode::Digit0) { next_duration.duration = 1 }
 }
 
 pub fn escape_the_matrix(
@@ -75,17 +84,19 @@ pub fn step_trigger(
     mut next_puzzle_state: ResMut<NextState<PuzzleState>>,
     mut warehouse: ResMut<Warehouse>,
     mut puzzle_ticker: ResMut<PuzzleSolvingTicker>,
+    next_duration: Res<NextDuration>,
 ) {
     puzzle_ticker.timer.tick(time.delta());
-    let mut anim = puzzle_ticker.timer.duration().as_millis();
 
     if !next_puzzle_state.is_added() && puzzle_ticker.timer.finished() && !warehouse.movements.is_empty() {
+        let mut anim = puzzle_ticker.timer.duration().as_millis();
+        if anim > 150 { anim = (anim * 7) / 10; }
+
         let step = warehouse.movements.remove(0);
 
         if warehouse.movements.is_empty() { next_puzzle_state.set(PuzzleState::Scoring) } 
-        else if anim > 2 { puzzle_ticker.timer.set_duration(Duration::from_millis(anim as u64 - 1)); }
-
-        if anim > 150 { anim = (anim * 7) / 10; }
+        
+        puzzle_ticker.timer.set_duration(Duration::from_millis(next_duration.duration));
 
         let (player, moved_objects) = take_step(&warehouse.player, &step, &warehouse.objects, &warehouse.walls);
 
