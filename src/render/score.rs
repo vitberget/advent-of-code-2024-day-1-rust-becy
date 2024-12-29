@@ -19,7 +19,6 @@ pub fn setup_score(
     asset_server: Res<AssetServer>,
     mut puzzle_ticker: ResMut<PuzzleSolvingTicker>,
 ) {
-    println!("Setup score");
     commands.insert_resource(Score { score: 0});
     commands.spawn((
             Text::new(""),
@@ -50,11 +49,10 @@ pub fn score_trigger(
 
     if puzzle_ticker.timer.finished() && !warehouse.objects.is_empty() {
         let anim = puzzle_ticker.timer.duration().as_millis();
-        if anim > 0 { puzzle_ticker.timer.set_duration(Duration::from_millis(anim as u64 - 1)); }
+        if anim > 4 { puzzle_ticker.timer.set_duration(Duration::from_millis(anim as u64 - 1)); }
 
         if let Some((entity, object)) = objects_query.iter().next() {
             if let Some(pos) = warehouse.objects.remove(&object.index) {
-                println!("pos {:?}", pos);
                 score.score += 100 * pos.y as usize + pos.x as usize;
             }
             commands.entity(entity).despawn();

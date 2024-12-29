@@ -2,7 +2,8 @@ use bevy::prelude::*;
 
 use crate::PuzzleState;
 
-use super::{objects::RenderObject, player::{RenderPlayer, RenderPlayerLight}};
+use super::objects::RenderObject;
+use super::player::{RenderPlayer, RenderPlayerLight};
 
 #[derive(Component)]
 pub struct SmoothObject {

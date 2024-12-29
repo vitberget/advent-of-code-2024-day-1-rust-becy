@@ -1,3 +1,4 @@
+use std::sync::LazyLock;
 use std::time::Duration;
 
 use bevy::prelude::*;
@@ -25,16 +26,21 @@ pub fn change_speed(
     keys: Res<ButtonInput<KeyCode>>,
     mut next_duration: ResMut<NextDuration>,
 ) {
-    if keys.just_pressed(KeyCode::Digit1) { next_duration.duration = 800 }
-    if keys.just_pressed(KeyCode::Digit2) { next_duration.duration = 400 }
-    if keys.just_pressed(KeyCode::Digit3) { next_duration.duration = 300 }
-    if keys.just_pressed(KeyCode::Digit4) { next_duration.duration = 200 }
-    if keys.just_pressed(KeyCode::Digit5) { next_duration.duration = 150 }
-    if keys.just_pressed(KeyCode::Digit6) { next_duration.duration = 100 }
-    if keys.just_pressed(KeyCode::Digit7) { next_duration.duration = 50 }
-    if keys.just_pressed(KeyCode::Digit8) { next_duration.duration = 20 }
-    if keys.just_pressed(KeyCode::Digit9) { next_duration.duration = 10 }
-    if keys.just_pressed(KeyCode::Digit0) { next_duration.duration = 1 }
+    static KEY_DELAY: LazyLock<Vec<(KeyCode, u64)>> = LazyLock::new(|| vec![ 
+        (KeyCode::Digit1, 800),
+        (KeyCode::Digit2, 400),
+        (KeyCode::Digit3, 300),
+        (KeyCode::Digit4, 200),
+        (KeyCode::Digit5, 150),
+        (KeyCode::Digit6, 100),
+        (KeyCode::Digit7, 50),
+        (KeyCode::Digit8, 20),
+        (KeyCode::Digit9, 10),
+        (KeyCode::Digit0, 1)]);
+
+    if let Some((_, delay)) = KEY_DELAY.iter().find(|(key_code, _)| keys.just_pressed(*key_code) ) {
+        next_duration.duration = *delay;
+    }
 }
 
 pub fn escape_the_matrix(
@@ -59,7 +65,7 @@ pub fn escape_the_matrix(
         }
 
         let (_, mut t) = player_query.single_mut();
-        *t = player_transform(&warehouse);
+        *t = player_transform(&warehouse.player ,&warehouse);
 
         for (o, mut t) in &mut objects_query {
             if let Some(pos) = warehouse.objects.get(&o.index) {
@@ -89,39 +95,33 @@ pub fn step_trigger(
 
     if !next_puzzle_state.is_added() && puzzle_ticker.timer.finished() && !warehouse.movements.is_empty() {
         let mut anim = puzzle_ticker.timer.duration().as_millis();
-        if anim > 150 { anim = (anim * 7) / 10; }
+        if anim > 100 { anim = (anim * 7) / 10; }
 
         let step = warehouse.movements.remove(0);
 
         if warehouse.movements.is_empty() { next_puzzle_state.set(PuzzleState::Scoring) } 
-        
+
         puzzle_ticker.timer.set_duration(Duration::from_millis(next_duration.duration));
 
         let (player, moved_objects) = take_step(&warehouse.player, &step, &warehouse.objects, &warehouse.walls);
 
+        let (_,t) = player_query.single();
+        let pos = warehouse.player + step.delta_position();
+
         if let Some(player) = player {
             warehouse.player = player;
-            let (_,t) = player_query.single();
-            commands.spawn(SmoothPlayer {
-                from: *t,
-                to: player_transform(&warehouse),
-                timer: Timer::new(Duration::from_millis(anim as u64), TimerMode::Once),
-                time: anim,
-                good: true
-
-            });
         } else {
-            let (_,t) = player_query.single();
-            let pos = warehouse.player + step.delta_position();
-            commands.spawn(SmoothPlayer {
-                from: *t,
-                to: object_transform(&pos, &warehouse),
-                timer: Timer::new(Duration::from_millis(anim as u64), TimerMode::Once),
-                time: anim,
-                good: false
-            });
             light_query.single_mut().color = Color::srgb(1.0, 0.0, 0.0);
         }
+
+        commands.spawn(SmoothPlayer {
+            from: *t,
+            to: player_transform(&pos, &warehouse),
+            timer: Timer::new(Duration::from_millis(anim as u64), TimerMode::Once),
+            time: anim,
+            good: player.is_some(),
+        });
+
         if let Some(objects) = moved_objects {
             for (idx, pos) in objects {
                 warehouse.objects.insert(idx, pos);

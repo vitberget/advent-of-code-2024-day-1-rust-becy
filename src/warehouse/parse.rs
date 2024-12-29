@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use anyhow::{bail, ensure};
+use anyhow::{bail, ensure, Context};
 
 use super::structs::{Warehouse, WarehouseMovement, WarehousePosition};
 
@@ -33,18 +33,16 @@ impl Warehouse {
         ensure!(!objects.is_empty(), "Missing objects");
         ensure!(!movements.is_empty(), "Missing movements");
 
-        if let Some(player) = player {
-            Ok(Self {
-                walls,
-                objects,
-                height,
-                width,
-                movements,
-                player,
-            })
-        } else {
-            bail!("Missing player");
-        }
+        let player = player.context("Missing player")?;
+
+        Ok(Self {
+            walls,
+            objects,
+            height,
+            width,
+            movements,
+            player,
+        })
     }
 }
 

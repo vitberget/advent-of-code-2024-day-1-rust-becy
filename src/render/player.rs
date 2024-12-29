@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::warehouse::structs::Warehouse;
+use crate::warehouse::structs::{Warehouse, WarehousePosition};
 
 #[derive(Component)]
 pub struct RenderPlayer;
@@ -19,7 +19,7 @@ pub fn add_player(
 
     commands.spawn((
             RenderPlayer,
-            player_transform(&warehouse)
+            player_transform(&warehouse.player,&warehouse)
     ))
         .with_children(|parent| {
             parent.spawn((
@@ -41,10 +41,9 @@ pub fn add_player(
         });
 }
 
-pub fn player_transform(warehouse: &Warehouse) -> Transform {
+pub fn player_transform(position: &WarehousePosition, warehouse: &Warehouse) -> Transform {
     Transform::from_xyz(
-        warehouse.player.x as f32 - warehouse.width as f32 / 2.0, 
-        warehouse.player.y as f32 - warehouse.width as f32 / 2.0, 
+        position.x as f32 - warehouse.width as f32 / 2.0, 
+        position.y as f32 - warehouse.width as f32 / 2.0, 
         1.5)
-
 }

@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+pub mod completed;
 pub mod floor;
 pub mod objects;
 pub mod player;
@@ -24,6 +25,4 @@ pub fn setup_things( mut commands: Commands,) {
         Camera3d::default(),
         Transform::from_xyz(5.5, -54.5, 59.0).looking_at(Vec3::new(0.0, -7.0, 0.0), Vec3::Z),
     ));
-
 }
-
