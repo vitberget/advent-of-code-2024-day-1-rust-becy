@@ -16,14 +16,12 @@ pub struct Score { pub score: usize }
 
 pub fn setup_score(
     mut commands: Commands, 
-    asset_server: Res<AssetServer>,
     mut puzzle_ticker: ResMut<PuzzleSolvingTicker>,
 ) {
     commands.insert_resource(Score { score: 0});
     commands.spawn((
             Text::new(""),
             TextFont {
-                font: asset_server.load("fonts/DejaVuSans.ttf"),
                 font_size: 42.0,
                 ..default()
             },
