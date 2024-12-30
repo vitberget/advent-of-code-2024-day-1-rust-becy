@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use anyhow::{bail, ensure, Context};
+use anyhow::{ensure, Context};
 
 use super::structs::{Warehouse, WarehouseMovement, WarehousePosition};
 

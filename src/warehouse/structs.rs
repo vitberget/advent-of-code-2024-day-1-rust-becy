@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use std::ops::{Add, AddAssign};
 
-use bevy::prelude::Resource;
+use bevy::prelude::{Resource, Transform};
 
 #[derive(Clone, Debug, Resource)]
 pub struct Warehouse {
@@ -42,6 +42,15 @@ impl AddAssign for WarehousePosition {
 impl WarehousePosition {
     pub(crate) fn new(x: i32, y: i32) -> Self {
         Self { x, y }
+    }
+}
+
+impl Warehouse {
+    pub fn get_bevy_transform(&self, pos: &WarehousePosition, z: f32) -> Transform {
+        Transform::from_xyz ( 
+            pos.x as f32 - self.width as f32 / 2.0, 
+            pos.y as f32 - self.height as f32 / 2.0,
+            z)
     }
 }
 

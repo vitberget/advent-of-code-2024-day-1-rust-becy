@@ -8,10 +8,10 @@ use crate::warehouse::structs::Warehouse;
 use crate::PuzzleState;
 
 use super::player::{player_transform, RenderPlayer, RenderPlayerLight};
-use super::objects::{object_transform, RenderObject};
+use super::objects::{self, object_transform, RenderObject};
 use super::smooth::{SmoothObject, SmoothPlayer};
 
-const TICK:u64 = 400;
+const TICK:u64 = 800;
 
 #[derive(Resource)] pub struct PuzzleSolvingTicker { pub timer: Timer, }
 #[derive(Resource)] pub struct NextDuration { pub duration: u64 }
@@ -19,7 +19,7 @@ const TICK:u64 = 400;
 
 pub fn setup_puzzle_ticker( mut commands: Commands,) {
     commands.insert_resource(PuzzleSolvingTicker { timer: Timer::new(Duration::from_millis(TICK), TimerMode::Repeating), });
-    commands.insert_resource(NextDuration { duration: 400 });
+    commands.insert_resource(NextDuration { duration: TICK });
 }
 
 pub fn change_speed(
@@ -27,7 +27,7 @@ pub fn change_speed(
     mut next_duration: ResMut<NextDuration>,
 ) {
     static KEY_DELAY: LazyLock<Vec<(KeyCode, u64)>> = LazyLock::new(|| vec![ 
-        (KeyCode::Digit1, 800),
+        (KeyCode::Digit1, TICK),
         (KeyCode::Digit2, 400),
         (KeyCode::Digit3, 300),
         (KeyCode::Digit4, 200),
@@ -58,20 +58,17 @@ pub fn escape_the_matrix(
                 warehouse.player = player;
             }
             if let Some(objects) = objects {
-                for (key, value) in objects {
-                    warehouse.objects.insert(key, value);
-                }
+                warehouse.objects.extend(objects);
             }
         }
 
         let (_, mut t) = player_query.single_mut();
         *t = player_transform(&warehouse.player ,&warehouse);
 
-        for (o, mut t) in &mut objects_query {
-            if let Some(pos) = warehouse.objects.get(&o.index) {
+        objects_query.iter_mut()
+            .for_each(|(o, mut t)| if let Some(pos) = warehouse.objects.get(&o.index) {
                 *t = object_transform(pos, &warehouse);
-            }
-        }
+            });
 
         light_query.single_mut().color = Color::srgb(1.0, 1.0, 1.0);
 
@@ -125,18 +122,16 @@ pub fn step_trigger(
         if let Some(objects) = moved_objects {
             for (idx, pos) in objects {
                 warehouse.objects.insert(idx, pos);
-                for (o, t) in &objects_query {
-                    if o.index == idx {
-                        commands.spawn(SmoothObject {
-                            index: idx,
-                            from: *t,
-                            to: object_transform(&pos, &warehouse),
-                            timer: Timer::new(Duration::from_millis(anim as u64), TimerMode::Once),
-                            time: anim
-                        });
-                    }
+                if let Some((_ , t)) = objects_query.iter().find(|(o, _)| o.index == idx) {
+                    commands.spawn(SmoothObject {
+                        index: idx,
+                        from: *t,
+                        to: object_transform(&pos, &warehouse),
+                        timer: Timer::new(Duration::from_millis(anim as u64), TimerMode::Once),
+                        time: anim
+                    });
                 }
             }
-        }
-    } 
+        } 
+    }
 }

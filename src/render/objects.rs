@@ -24,9 +24,6 @@ pub fn add_objects(
     };
 }
 
-pub fn object_transform(pos: &WarehousePosition, warehouse: &Warehouse) -> Transform {
-    Transform::from_xyz(
-        pos.x as f32 - warehouse.width as f32 / 2.0, 
-        pos.y as f32 - warehouse.width as f32 / 2.0, 
-        0.5)
+pub fn object_transform(position: &WarehousePosition, warehouse: &Warehouse) -> Transform {
+    warehouse.get_bevy_transform(position, 0.5)
 }

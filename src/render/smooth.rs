@@ -63,8 +63,10 @@ pub fn smooth_player(
                 if smooth.timer.finished() || smooth.timer.duration().as_millis() < 3 {
                     *t = if smooth.good { smooth.to } else { smooth.from };
                     commands.entity(entity).despawn();
-                   
-                    light_query.single_mut().color = Color::srgb(1.0, 1.0, 1.0);
+                    if !smooth.good {
+                        light_query.single_mut().color = Color::srgb(1.0, 1.0, 1.0);
+                    }
+
 
                 } else {
                     let elapsed = smooth.timer.elapsed().as_millis();

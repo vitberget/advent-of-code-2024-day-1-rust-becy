@@ -42,8 +42,5 @@ pub fn add_player(
 }
 
 pub fn player_transform(position: &WarehousePosition, warehouse: &Warehouse) -> Transform {
-    Transform::from_xyz(
-        position.x as f32 - warehouse.width as f32 / 2.0, 
-        position.y as f32 - warehouse.width as f32 / 2.0, 
-        1.5)
+    warehouse.get_bevy_transform(position, 1.5)
 }
