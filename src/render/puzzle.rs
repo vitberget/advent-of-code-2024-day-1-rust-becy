@@ -8,7 +8,7 @@ use crate::warehouse::structs::Warehouse;
 use crate::PuzzleState;
 
 use super::player::{player_transform, RenderPlayer, RenderPlayerLight};
-use super::objects::{self, object_transform, RenderObject};
+use super::objects::{object_transform, RenderObject};
 use super::smooth::{SmoothObject, SmoothPlayer};
 
 const TICK:u64 = 800;
@@ -115,7 +115,6 @@ pub fn step_trigger(
             from: *t,
             to: player_transform(&pos, &warehouse),
             timer: Timer::new(Duration::from_millis(anim as u64), TimerMode::Once),
-            time: anim,
             good: player.is_some(),
         });
 
