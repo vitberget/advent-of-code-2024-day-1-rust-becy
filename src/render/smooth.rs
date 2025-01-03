@@ -71,7 +71,7 @@ pub fn smooth_player(
                 } else {
                     let elapsed = match (smooth.good, elapsed > duration / 4) {
                         (true, _) => elapsed,
-                        (false, false) => elapsed / 2,
+                        (false, false) => elapsed,
                         (false, true) => duration / 2 - elapsed / 2
                     };
 
