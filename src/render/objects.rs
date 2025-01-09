@@ -12,7 +12,13 @@ pub fn add_objects(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let mesh = meshes.add(Sphere::new(0.5));
-    let material = materials.add(Color::srgb(0.5, 0.9, 0.3));
+    let material = materials.add( StandardMaterial {
+        base_color: Color::srgb(0.5, 0.9, 0.3),
+                    metallic: 0.6,
+                    reflectance: 0.4,
+        ..default()
+    }
+        );
 
     for (idx, pos) in warehouse.objects.iter() {
         commands.spawn((

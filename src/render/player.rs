@@ -15,7 +15,12 @@ pub fn add_player(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let mesh = meshes.add(Cone::new(0.5, 3.0));
-    let material = materials.add(Color::srgb(1.0, 0.2, 0.3));
+    let material = materials.add(
+        StandardMaterial {
+            base_color: Color::srgb(1.0, 0.2, 0.3),
+            reflectance: 1.0,
+            ..default()
+        });
 
     commands.spawn((
             RenderPlayer,
