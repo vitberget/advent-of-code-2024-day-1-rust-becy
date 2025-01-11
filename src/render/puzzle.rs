@@ -13,18 +13,27 @@ use super::smooth::{SmoothObject, TurnOffTheLight};
 
 const TICK:u64 = 800;
 
-#[derive(Resource)] pub struct PuzzleSolvingTicker { pub timer: Timer, }
-#[derive(Resource)] pub struct NextDuration { pub duration: u64 }
-#[derive(Component)] pub struct ScoreBoard { pub score: usize }
+#[derive(Resource)] pub struct PuzzleSolvingTicker { 
+    pub timer: Timer,
+    pub duration: u64
+}
+
+impl PuzzleSolvingTicker {
+    pub fn update_duration(&mut self) {
+        self.timer.set_duration(Duration::from_millis(self.duration));
+    }
+}
 
 pub fn setup_puzzle_ticker( mut commands: Commands,) {
-    commands.insert_resource(PuzzleSolvingTicker { timer: Timer::new(Duration::from_millis(TICK), TimerMode::Repeating), });
-    commands.insert_resource(NextDuration { duration: TICK });
+    commands.insert_resource(PuzzleSolvingTicker { 
+        timer: Timer::new(Duration::from_millis(TICK), TimerMode::Repeating),
+        duration: TICK
+    });
 }
 
 pub fn change_speed(
     keys: Res<ButtonInput<KeyCode>>,
-    mut next_duration: ResMut<NextDuration>,
+    mut next_duration: ResMut<PuzzleSolvingTicker>,
 ) {
     static KEY_DELAY: LazyLock<Vec<(KeyCode, u64)>> = LazyLock::new(|| vec![ 
         (KeyCode::Digit1, TICK),
@@ -86,7 +95,6 @@ pub fn step_trigger(
     mut next_puzzle_state: ResMut<NextState<PuzzleState>>,
     mut warehouse: ResMut<Warehouse>,
     mut puzzle_ticker: ResMut<PuzzleSolvingTicker>,
-    next_duration: Res<NextDuration>,
 ) {
     puzzle_ticker.timer.tick(time.delta());
 
@@ -98,7 +106,7 @@ pub fn step_trigger(
 
         if warehouse.movements.is_empty() { next_puzzle_state.set(PuzzleState::Scoring) } 
 
-        puzzle_ticker.timer.set_duration(Duration::from_millis(next_duration.duration));
+        puzzle_ticker.update_duration();
 
         let (player, moved_objects) = take_step(&warehouse.player, &step, &warehouse.objects, &warehouse.walls);
 
