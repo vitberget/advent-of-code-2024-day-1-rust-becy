@@ -1,6 +1,7 @@
 use std::fs::read_to_string;
 
 use bevy::prelude::*;
+
 use render::completed::escape_forever;
 use render::objects::add_objects;
 use render::player::add_player;

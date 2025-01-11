@@ -49,7 +49,7 @@ pub fn change_speed(
         (KeyCode::Digit7, 50),
         (KeyCode::Digit8, 20),
         (KeyCode::Digit9, 10),
-        (KeyCode::Digit0, 1)]);
+        (KeyCode::Digit0, 5)]);
 
     if let Some((_, delay)) = KEY_DELAY.iter().find(|(key_code, _)| keys.just_pressed(*key_code) ) {
         next_duration.duration = *delay;

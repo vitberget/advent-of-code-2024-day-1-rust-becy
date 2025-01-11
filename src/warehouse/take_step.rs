@@ -8,14 +8,14 @@ pub fn take_step(
     step: &WarehouseMovement,  
     objects: &HashMap<usize, WarehousePosition>, 
     walls: &HashSet<WarehousePosition>
-    ) -> (Option<WarehousePosition>, Option<HashMap<usize, WarehousePosition>>) {
+) -> (Option<WarehousePosition>, Option<HashMap<usize, WarehousePosition>>) {
 
     let step = step.delta_position();
 
     let next_player = *player + step;
     let mut test_position = *player + step;
     let mut moved_objects: HashMap<usize, WarehousePosition> = HashMap::new();
-    
+
     loop {
         if walls.contains(&test_position) { return (None,None)}
         if let Some((idx, pos)) = objects.iter().find(|(_, pos)| **pos == test_position) {
