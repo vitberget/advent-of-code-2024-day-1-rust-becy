@@ -21,3 +21,7 @@ cargo run --release
 ## While completed
 
 When scoring is over, press `Escape` to quit.
+
+## Your own puzzle
+
+Replace the content of the file `puzzle.txt` with your puzzle data.
