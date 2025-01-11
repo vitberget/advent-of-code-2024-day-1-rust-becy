@@ -3,9 +3,9 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 
-use crate::warehouse::take_step::take_step;
-use crate::warehouse::structs::Warehouse;
 use crate::PuzzleState;
+use crate::warehouse::structs::warehouse::Warehouse;
+use crate::warehouse::take_step::take_step;
 
 use super::player::{player_transform, RenderPlayer, RenderPlayerLight};
 use super::objects::{object_transform, RenderObject};
@@ -22,13 +22,17 @@ impl PuzzleSolvingTicker {
     pub fn update_duration(&mut self) {
         self.timer.set_duration(Duration::from_millis(self.duration));
     }
+    
+    pub fn new(time: u64) -> Self {
+        PuzzleSolvingTicker { 
+            timer: Timer::new(Duration::from_millis(time), TimerMode::Repeating),
+            duration: time
+        }
+    }
 }
 
 pub fn setup_puzzle_ticker( mut commands: Commands,) {
-    commands.insert_resource(PuzzleSolvingTicker { 
-        timer: Timer::new(Duration::from_millis(TICK), TimerMode::Repeating),
-        duration: TICK
-    });
+    commands.insert_resource(PuzzleSolvingTicker::new(TICK));
 }
 
 pub fn change_speed(
@@ -63,12 +67,8 @@ pub fn escape_the_matrix(
     if keys.just_pressed(KeyCode::Escape) {
         for step in  warehouse.movements.clone() {
             let (player, objects) = take_step(&warehouse.player, &step, &warehouse.objects, &warehouse.walls); 
-            if let Some(player) = player {
-                warehouse.player = player;
-            }
-            if let Some(objects) = objects {
-                warehouse.objects.extend(objects);
-            }
+            if let Some(player) = player { warehouse.player = player; }
+            if let Some(objects) = objects { warehouse.objects.extend(objects); }
         }
 
         let (_, mut t) = player_query.single_mut();

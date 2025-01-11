@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
-use crate::warehouse::structs::{Warehouse, WarehousePosition};
+use crate::warehouse::structs::position::WarehousePosition;
+use crate::warehouse::structs::warehouse::Warehouse;
 
 #[derive(Component)]
 pub struct RenderPlayer;

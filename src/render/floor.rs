@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::warehouse::structs::Warehouse;
+use crate::warehouse::structs::warehouse::Warehouse;
 
 pub fn add_floor(
     mut commands: Commands,

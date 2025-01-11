@@ -9,7 +9,7 @@ pub mod score;
 pub mod smooth;
 pub mod walls;
 
-pub fn setup_things( mut commands: Commands,) {
+pub fn setup_camera_and_light( mut commands: Commands,) {
     commands.spawn((
         PointLight {
             shadows_enabled: true,

@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
-use crate::warehouse::structs::{Warehouse, WarehousePosition};
+use crate::warehouse::structs::position::WarehousePosition;
+use crate::warehouse::structs::warehouse::Warehouse;
 
 #[derive(Component)]
 pub struct RenderObject { pub index: usize }
@@ -14,18 +15,17 @@ pub fn add_objects(
     let mesh = meshes.add(Sphere::new(0.5));
     let material = materials.add( StandardMaterial {
         base_color: Color::srgb(0.5, 0.9, 0.3),
-                    metallic: 0.6,
-                    reflectance: 0.4,
+        metallic: 0.6,
+        reflectance: 0.4,
         ..default()
-    }
-        );
+    });
 
     for (idx, pos) in warehouse.objects.iter() {
         commands.spawn((
-            RenderObject{ index: *idx },
-            Mesh3d(mesh.clone()),
-            MeshMaterial3d(material.clone()),
-            object_transform(pos, &warehouse)
+                RenderObject{ index: *idx },
+                Mesh3d(mesh.clone()),
+                MeshMaterial3d(material.clone()),
+                object_transform(pos, &warehouse)
         ));
     };
 }

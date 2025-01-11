@@ -2,8 +2,8 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 
-use crate::warehouse::structs::Warehouse;
 use crate::PuzzleState;
+use crate::warehouse::structs::warehouse::Warehouse;
 
 use super::objects::RenderObject;
 use super::puzzle::PuzzleSolvingTicker;

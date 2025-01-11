@@ -2,7 +2,9 @@ use std::collections::{HashMap, HashSet};
 
 use anyhow::{ensure, Context};
 
-use super::structs::{Warehouse, WarehouseMovement, WarehousePosition};
+use crate::warehouse::structs::movement::WarehouseMovement;
+use crate::warehouse::structs::position::WarehousePosition;
+use super::structs::warehouse::Warehouse;
 
 impl Warehouse {
     pub fn parse(text: &str) -> anyhow::Result<Self> {
@@ -43,18 +45,6 @@ impl Warehouse {
             movements,
             player,
         })
-    }
-}
-
-impl WarehouseMovement {
-    pub fn parse(ch: char) -> Option<Self> {
-        match ch {
-            '<' => Some(Self::West),
-            '>' => Some(Self::East),
-            '^' => Some(Self::North),
-            'v' => Some(Self::South),
-            _ => None
-        } 
     }
 }
 

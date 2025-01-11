@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
-use super::structs::{WarehouseMovement, WarehousePosition};
+use super::structs::movement::WarehouseMovement;
+use super::structs::position::WarehousePosition;
 
 pub fn take_step(
     player: &WarehousePosition, 
@@ -31,8 +32,8 @@ pub fn take_step(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use super::super::structs::WarehousePosition as Pos;
-    use super::super::structs::WarehouseMovement as Mov;
+    use super::super::structs::movement::WarehouseMovement as Mov;
+    use super::super::structs::position::WarehousePosition as Pos;
 
     #[test]
     fn test_step_just_player() {
