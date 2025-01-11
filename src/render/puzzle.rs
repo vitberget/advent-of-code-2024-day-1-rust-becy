@@ -9,7 +9,7 @@ use crate::PuzzleState;
 
 use super::player::{player_transform, RenderPlayer, RenderPlayerLight};
 use super::objects::{object_transform, RenderObject};
-use super::smooth::{SmoothObject, SmoothPlayer};
+use super::smooth::{SmoothObject, TurnOffTheLight};
 
 const TICK:u64 = 800;
 
@@ -80,9 +80,9 @@ pub fn escape_the_matrix(
 pub fn step_trigger(
     mut commands: Commands,
     time: Res<Time>,
-    player_query: Query<(&RenderPlayer, &Transform), Without<RenderObject>>,
-    mut light_query: Query<&mut PointLight, With<RenderPlayerLight>>, 
-    objects_query: Query<(&RenderObject, &Transform)>,
+    player_query: Query<(Entity, &RenderPlayer, &Transform), Without<RenderObject>>,
+    mut light_query: Query<(Entity, &mut PointLight), With<RenderPlayerLight>>, 
+    objects_query: Query<(Entity, &RenderObject, &Transform)>,
     mut next_puzzle_state: ResMut<NextState<PuzzleState>>,
     mut warehouse: ResMut<Warehouse>,
     mut puzzle_ticker: ResMut<PuzzleSolvingTicker>,
@@ -102,33 +102,24 @@ pub fn step_trigger(
 
         let (player, moved_objects) = take_step(&warehouse.player, &step, &warehouse.objects, &warehouse.walls);
 
-        let (_,t) = player_query.single();
+        let (player_entity, _, p_transform) = player_query.single();
         let pos = warehouse.player + step.delta_position();
 
         if let Some(player) = player {
             warehouse.player = player;
         } else {
-            light_query.single_mut().color = Color::srgb(1.0, 0.0, 0.0);
+            let (color_entity, mut light) = light_query.single_mut();
+            light.color = Color::srgb(1.0, 0.0, 0.0);
+            commands.entity(color_entity).insert( TurnOffTheLight::new((anim/2) as u64));
         }
 
-        commands.spawn(SmoothPlayer {
-            from: *t,
-            to: player_transform(&pos, &warehouse),
-            timer: Timer::new(Duration::from_millis(anim as u64), TimerMode::Once),
-            good: player.is_some(),
-        });
+        commands.entity(player_entity).insert(SmoothObject::new(*p_transform, player_transform(&pos, &warehouse), anim as u64, player.is_some()));
 
         if let Some(objects) = moved_objects {
             for (idx, pos) in objects {
                 warehouse.objects.insert(idx, pos);
-                if let Some((_ , t)) = objects_query.iter().find(|(o, _)| o.index == idx) {
-                    commands.spawn(SmoothObject {
-                        index: idx,
-                        from: *t,
-                        to: object_transform(&pos, &warehouse),
-                        timer: Timer::new(Duration::from_millis(anim as u64), TimerMode::Once),
-                        time: anim
-                    });
+                if let Some((object_entity, _ , t)) = objects_query.iter().find(|(_, o, _)| o.index == idx) {
+                    commands.entity(object_entity).insert(SmoothObject::new(*t, object_transform(&pos, &warehouse), anim as u64, true)); 
                 }
             }
         } 
