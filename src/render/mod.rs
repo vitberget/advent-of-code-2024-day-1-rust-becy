@@ -23,6 +23,6 @@ pub fn setup_camera_and_light( mut commands: Commands,) {
 
     commands.spawn((
         Camera3d::default(),
-        Transform::from_xyz(5.5, -54.5, 59.0).looking_at(Vec3::new(0.0, -7.0, 0.0), Vec3::Z),
+        Transform::from_xyz(4.5, -43.5, 45.0).looking_at(Vec3::new(0.0, -7.8, 0.0), Vec3::Z),
     ));
 }
