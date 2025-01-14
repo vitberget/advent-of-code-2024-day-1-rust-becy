@@ -100,7 +100,7 @@ pub fn step_trigger(
 
     if !next_puzzle_state.is_added() && puzzle_ticker.timer.finished() && !warehouse.movements.is_empty() {
         let mut anim = puzzle_ticker.timer.duration().as_millis();
-        if anim > 100 { anim = (anim * 7) / 10; }
+        if anim > 10 { anim = (anim * 7) / 10; }
 
         let step = warehouse.movements.remove(0);
 

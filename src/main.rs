@@ -33,7 +33,7 @@ fn main() -> anyhow::Result<()> {
        .init_state::<PuzzleState>()
        .insert_resource(warehouse)
        .add_systems(Startup, (setup_camera_and_light, add_floor, add_walls, add_objects, add_player, setup_puzzle_ticker))
-       .add_systems(Update, (step_trigger, smooth_objects, turn_off_the_light, escape_the_matrix, change_speed).run_if(in_state(PuzzleState::Solving)))
+       .add_systems(Update, (step_trigger, (smooth_objects).before(step_trigger), turn_off_the_light, escape_the_matrix, change_speed).run_if(in_state(PuzzleState::Solving)))
        .add_systems(Update, (score_trigger).run_if(in_state(PuzzleState::Scoring)))
        .add_systems(Update, (escape_forever).run_if(in_state(PuzzleState::Completed)))
        .add_systems(OnEnter(PuzzleState::Scoring), setup_score)

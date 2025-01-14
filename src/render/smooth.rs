@@ -50,7 +50,7 @@ pub fn smooth_objects(
             let elapsed = smooth.timer.elapsed().as_millis();
             let duration = smooth.timer.duration().as_millis();
 
-            if smooth.timer.finished() || duration < 3 || !smooth.good && elapsed > duration / 2 {
+            if smooth.timer.finished() || duration < 10 || !smooth.good && elapsed > duration / 2 {
                 *transform = if smooth.good { smooth.to } else { smooth.from };
                 commands.entity(entity).remove::<SmoothObject>();
             } else {
