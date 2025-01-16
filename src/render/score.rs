@@ -11,6 +11,19 @@ use super::puzzle::PuzzleSolvingTicker;
 #[derive(Component)]
 pub struct ScoreText;
 
+#[derive(Component)]
+pub struct Shrinker {
+    pub timer: Timer
+}
+
+impl Shrinker {
+    pub fn new(time: u64) -> Self {
+        Self {
+            timer: Timer::new(Duration::from_millis(time), TimerMode::Once)
+        }
+    }
+}
+
 #[derive(Resource)]
 pub struct Score { pub score: usize }
 
@@ -31,6 +44,23 @@ pub fn setup_score(
     puzzle_ticker.timer.reset();
 }
 
+pub fn shrinking(
+    time: Res<Time>,
+    mut commands: Commands, 
+    mut shrink_query: Query<(Entity, &mut Transform, &mut Shrinker)>
+) {
+    let delta = time.delta();
+   for (entity, mut transform, mut shrinker) in shrink_query.iter_mut() {
+        shrinker.timer.tick(delta);
+        if shrinker.timer.finished() {
+            commands.entity(entity).despawn_recursive();
+        } else {
+            let scale: f32 = shrinker.timer.elapsed().as_millis() as f32 / shrinker.timer.duration().as_millis() as f32;
+            transform.scale = Vec3::new(1.0 - scale, 1.0 - scale, 1.0 - scale);
+            transform.translation.z = 0.5 + 10.0 * scale;
+        }
+   } 
+}
 
 #[allow(clippy::too_many_arguments)]
 pub fn score_trigger(
@@ -53,10 +83,10 @@ pub fn score_trigger(
             if let Some(pos) = warehouse.objects.remove(&object.index) {
                 score.score += 100 * pos.y as usize + pos.x as usize;
             }
-            commands.entity(entity).despawn();
+            commands.entity(entity).insert(Shrinker::new(400));
         }
 
-        for mut text in &mut text_query { **text = format!("{}", score.score); }
+        for mut text in &mut text_query { **text = format!("{:08}", score.score); }
 
         if warehouse.objects.is_empty() { next_puzzle_state.set(PuzzleState::Completed); }
     }
